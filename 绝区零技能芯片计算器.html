@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绝区零技能芯片计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 120px);
+            min-height: 600px;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            flex: 0 0 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .skills-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+            flex-shrink: 0;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .skill-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 1em;
+        }
+
+        .skill-level {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+
+        .skill-slider-container {
+            margin-bottom: 8px;
+        }
+
+        .skill-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .skill-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .skill-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .skill-levels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .skill-input label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .skill-input select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .skill-input select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chips-section {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            flex: 0 0 auto;
+        }
+
+        .chips-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .chip-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .chip-label {
+            flex: 0 0 70px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .chip-input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .chip-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .calculate-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+
+        .result-section {
+            padding: 18px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 12px;
+            color: white;
+            display: none;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            flex: 1;
+            min-height: 0;
+        }
+
+        .result-title {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .result-content {
+            display: flex;
+            gap: 15px;
+        }
+
+        .result-column {
+            flex: 1;
+        }
+
+        .result-title {
+            font-size: 1em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .result-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .result-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .result-item .chip-type {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .result-item .value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .shortage-count {
+            color: #ffeb3b;
+        }
+
+        .shortage-count.enough {
+            color: #4CAF50;
+        }
+
+        .info-text {
+            text-align: center;
+            color: #666;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>绝区零技能芯片计算器</h1>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="section">
+                    <div class="section-title">技能等级设置</div>
+                    <div class="skills-list">
+                        <div class="skill-item">
+                            <div class="skill-header">
+                                <span class="skill-name">普通攻击</span>
+                                <span class="skill-level" id="level1-display">12级</span>
+                            </div>
+                            <div class="skill-slider-container">
+                                <input type="range" class="skill-slider" id="skill1" min="0" max="12" value="12" step="1" oninput="updateSkillLevel(1)">
+                            </div>
+                            <div class="skill-levels">
+                                <span>未升级</span>
+                                <span>1级</span>
+                                <span>6级</span>
+                                <span>12级</span>
+                            </div>
+                        </div>
+
+                        <div class="skill-item">
+                            <div class="skill-header">
+                                <span class="skill-name">闪避</span>
+                                <span class="skill-level" id="level2-display">12级</span>
+                            </div>
+                            <div class="skill-slider-container">
+                                <input type="range" class="skill-slider" id="skill2" min="0" max="12" value="12" step="1" oninput="updateSkillLevel(2)">
+                            </div>
+                            <div class="skill-levels">
+                                <span>未升级</span>
+                                <span>1级</span>
+                                <span>6级</span>
+                                <span>12级</span>
+                            </div>
+                        </div>
+
+                        <div class="skill-item">
+                            <div class="skill-header">
+                                <span class="skill-name">支援技</span>
+                                <span class="skill-level" id="level3-display">12级</span>
+                            </div>
+                            <div class="skill-slider-container">
+                                <input type="range" class="skill-slider" id="skill3" min="0" max="12" value="12" step="1" oninput="updateSkillLevel(3)">
+                            </div>
+                            <div class="skill-levels">
+                                <span>未升级</span>
+                                <span>1级</span>
+                                <span>6级</span>
+                                <span>12级</span>
+                            </div>
+                        </div>
+
+                        <div class="skill-item">
+                            <div class="skill-header">
+                                <span class="skill-name">特殊技</span>
+                                <span class="skill-level" id="level4-display">12级</span>
+                            </div>
+                            <div class="skill-slider-container">
+                                <input type="range" class="skill-slider" id="skill4" min="0" max="12" value="12" step="1" oninput="updateSkillLevel(4)">
+                            </div>
+                            <div class="skill-levels">
+                                <span>未升级</span>
+                                <span>1级</span>
+                                <span>6级</span>
+                                <span>12级</span>
+                            </div>
+                        </div>
+
+                        <div class="skill-item">
+                            <div class="skill-header">
+                                <span class="skill-name">连携技</span>
+                                <span class="skill-level" id="level5-display">12级</span>
+                            </div>
+                            <div class="skill-slider-container">
+                                <input type="range" class="skill-slider" id="skill5" min="0" max="12" value="12" step="1" oninput="updateSkillLevel(5)">
+                            </div>
+                            <div class="skill-levels">
+                                <span>未升级</span>
+                                <span>1级</span>
+                                <span>6级</span>
+                                <span>12级</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-text">芯片转换比例：1个A级芯片 = 3个B级芯片 = 9个C级芯片</div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="chips-section">
+                    <div class="section-title">现有芯片数量</div>
+                    <div class="chips-list">
+                        <div class="chip-item">
+                            <span class="chip-label">C级芯片</span>
+                            <input type="number" class="chip-input" id="chip-c" min="0" value="0" placeholder="输入数量">
+                        </div>
+                        <div class="chip-item">
+                            <span class="chip-label">B级芯片</span>
+                            <input type="number" class="chip-input" id="chip-b" min="0" value="0" placeholder="输入数量">
+                        </div>
+                        <div class="chip-item">
+                            <span class="chip-label">A级芯片</span>
+                            <input type="number" class="chip-input" id="chip-a" min="0" value="0" placeholder="输入数量">
+                        </div>
+                    </div>
+                    <button class="calculate-btn" onclick="calculate()">计算芯片需求</button>
+                </div>
+
+                <div class="result-section" id="result">
+                    <div class="result-title">芯片需求计算结果</div>
+                    <div class="result-content">
+                        <div class="result-column">
+                            <div class="result-title">总需求</div>
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <span class="chip-type">C级芯片</span>
+                                    <span class="value" id="total-c">0</span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="chip-type">B级芯片</span>
+                                    <span class="value" id="total-b">0</span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="chip-type">A级芯片</span>
+                                    <span class="value" id="total-a">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-column">
+                            <div class="result-title">缺口</div>
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <span class="chip-type">C级芯片</span>
+                                    <span class="value shortage-count" id="shortage-c">0</span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="chip-type">B级芯片</span>
+                                    <span class="value shortage-count" id="shortage-b">0</span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="chip-type">A级芯片</span>
+                                    <span class="value shortage-count" id="shortage-a">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 技能升级芯片消耗配置 (从1级开始计算)
+        const LEVEL_REQUIREMENTS = {
+            1: { c: 0, b: 0, a: 0 },  // 1级
+            2: { c: 2, b: 0, a: 0 },  // 1->2级
+            3: { c: 3, b: 0, a: 0 },  // 2->3级
+            4: { c: 0, b: 2, a: 0 },  // 3->4级
+            5: { c: 0, b: 3, a: 0 },  // 4->5级
+            6: { c: 0, b: 4, a: 0 },  // 5->6级
+            7: { c: 0, b: 6, a: 0 },  // 6->7级
+            8: { c: 0, b: 0, a: 5 },  // 7->8级
+            9: { c: 0, b: 0, a: 8 },  // 8->9级
+            10: { c: 0, b: 0, a: 10 }, // 9->10级
+            11: { c: 0, b: 0, a: 12 }, // 10->11级
+            12: { c: 0, b: 0, a: 15 }  // 11->12级
+        };
+
+        // 芯片转换比例
+        const CHIP_CONVERSION = {
+            a_to_b: 3,  // 1A = 3B
+            a_to_c: 9,  // 1A = 9C
+            b_to_c: 3   // 1B = 3C
+        };
+
+        function updateSkillLevel(skillNum) {
+            const slider = document.getElementById(`skill${skillNum}`);
+            const display = document.getElementById(`level${skillNum}-display`);
+            const level = parseInt(slider.value);
+
+            if (level === 0) {
+                display.textContent = '未升级';
+            } else {
+                display.textContent = level + '级';
+            }
+        }
+
+        function calculate() {
+            // 获取技能等级
+            const skillLevels = [];
+            for (let i = 1; i <= 5; i++) {
+                const level = parseInt(document.getElementById(`skill${i}`).value);
+                skillLevels.push(level);
+            }
+
+            // 获取现有芯片数量
+            const currentChips = {
+                c: parseInt(document.getElementById('chip-c').value) || 0,
+                b: parseInt(document.getElementById('chip-b').value) || 0,
+                a: parseInt(document.getElementById('chip-a').value) || 0
+            };
+
+            // 计算总需求数量（累计计算）
+            const totalNeeded = {
+                c: 0,
+                b: 0,
+                a: 0
+            };
+
+            skillLevels.forEach(level => {
+                if (level > 1) {
+                    for (let i = 2; i <= level; i++) {
+                        const req = LEVEL_REQUIREMENTS[i];
+                        totalNeeded.c += req.c;
+                        totalNeeded.b += req.b;
+                        totalNeeded.a += req.a;
+                    }
+                }
+            });
+
+            // 计算芯片缺口（考虑转换）
+            let shortage = calculateShortage(totalNeeded, currentChips);
+
+            // 更新结果显示
+            document.getElementById('total-c').textContent = totalNeeded.c;
+            document.getElementById('total-b').textContent = totalNeeded.b;
+            document.getElementById('total-a').textContent = totalNeeded.a;
+
+            document.getElementById('shortage-c').textContent = shortage.c;
+            document.getElementById('shortage-b').textContent = shortage.b;
+            document.getElementById('shortage-a').textContent = shortage.a;
+
+            // 设置颜色显示
+            setChipColor('shortage-c', shortage.c === 0);
+            setChipColor('shortage-b', shortage.b === 0);
+            setChipColor('shortage-a', shortage.a === 0);
+
+            // 添加足够的样式类
+            document.getElementById('shortage-c').className = shortage.c === 0 ? 'value shortage-count enough' : 'value shortage-count';
+            document.getElementById('shortage-b').className = shortage.b === 0 ? 'value shortage-count enough' : 'value shortage-count';
+            document.getElementById('shortage-a').className = shortage.a === 0 ? 'value shortage-count enough' : 'value shortage-count';
+
+            // 显示结果区域
+            document.getElementById('result').style.display = 'block';
+        }
+
+        function calculateShortage(needed, have) {
+            // 将现有芯片转换为C级等价值进行比较
+            const haveInC = have.c + have.b * CHIP_CONVERSION.b_to_c + have.a * CHIP_CONVERSION.a_to_c;
+            const neededInC = needed.c + needed.b * CHIP_CONVERSION.b_to_c + needed.a * CHIP_CONVERSION.a_to_c;
+
+            const shortageInC = Math.max(0, neededInC - haveInC);
+
+            // 优先使用A级芯片抵扣缺口
+            let shortageA = Math.max(0, needed.a - have.a);
+            let remainingC = shortageInC - shortageA * CHIP_CONVERSION.a_to_c;
+
+            // 如果A级芯片不够，用B级芯片抵扣
+            let shortageB = 0;
+            if (remainingC > 0) {
+                shortageB = Math.min(needed.b, Math.ceil(remainingC / CHIP_CONVERSION.b_to_c));
+                remainingC -= shortageB * CHIP_CONVERSION.b_to_c;
+            }
+
+            // 最后剩下的C级芯片缺口
+            let shortageC = Math.max(0, remainingC);
+
+            return {
+                c: shortageC,
+                b: shortageB,
+                a: shortageA
+            };
+        }
+
+        function setChipColor(elementId, isEnough) {
+            const element = document.getElementById(elementId);
+            if (isEnough) {
+                element.style.color = '#4CAF50';  // 绿色表示足够
+            } else {
+                element.style.color = '#ffeb3b';  // 黄色表示缺少
+            }
+        }
+
+        // 初始化所有技能为12级（因为通常都是想升满）
+        window.onload = function() {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`skill${i}`).value = '12';
+                updateSkillLevel(i); // 初始化显示
+            }
+        };
+    </script>
+</body>
+</html>
