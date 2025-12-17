@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, minimum-scale=0.5, user-scalable=yes">
     <title>绝区零技能芯片计算器</title>
     <style>
         * {
@@ -26,6 +26,79 @@
             border-radius: 15px;
             padding: 20px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            min-width: 320px;
+            width: 100%;
+            transform-origin: center top;
+        }
+
+        /* PC端缩放适配 */
+        @media screen and (min-width: 769px) {
+            .container {
+                padding: max(10px, min(30px, 2vw));
+                margin: max(5px, min(20px, 1vw)) auto;
+                max-width: min(1200px, 95vw);
+            }
+
+            .main-content {
+                gap: max(10px, min(30px, 2.5vw));
+                height: min(calc(100vh - 120px), max(500px, 85vh));
+            }
+
+            .left-panel {
+                min-width: max(250px, min(400px, 35vw));
+            }
+
+            .right-panel {
+                flex: 0 0 max(240px, min(350px, 30vw));
+            }
+        }
+
+        /* 缩放级别适配 */
+        @media screen and (min-width: 769px) and (max-width: 900px) {
+            .container {
+                padding: 15px;
+                max-width: 100%;
+            }
+
+            .main-content {
+                gap: 15px;
+                height: calc(100vh - 100px);
+            }
+
+            .left-panel {
+                min-width: 280px;
+            }
+
+            .right-panel {
+                flex: 0 0 260px;
+            }
+        }
+
+        @media screen and (min-width: 901px) and (max-width: 1200px) {
+            .container {
+                padding: 18px;
+            }
+
+            .main-content {
+                gap: 18px;
+            }
+        }
+
+        @media screen and (min-width: 1201px) {
+            .container {
+                padding: 20px;
+                max-width: 1000px;
+            }
+
+            .main-content {
+                gap: 20px;
+                height: calc(100vh - 120px);
+            }
+        }
+
+        /* JavaScript 动态缩放适配 */
+        .zoom-aware {
+            transition: all 0.2s ease;
         }
 
         /* 移动端适配 */
@@ -770,25 +843,57 @@
         }
 
         function calculateShortage(needed, have) {
-            // 将现有芯片转换为C级等价值进行比较
-            const haveInC = have.c + have.b * CHIP_CONVERSION.b_to_c + have.a * CHIP_CONVERSION.a_to_c;
-            const neededInC = needed.c + needed.b * CHIP_CONVERSION.b_to_c + needed.a * CHIP_CONVERSION.a_to_c;
-
-            const shortageInC = Math.max(0, neededInC - haveInC);
-
-            // 优先使用A级芯片抵扣缺口
+            // 首先计算每种芯片的直接缺口
             let shortageA = Math.max(0, needed.a - have.a);
-            let remainingC = shortageInC - shortageA * CHIP_CONVERSION.a_to_c;
+            let shortageB = Math.max(0, needed.b - have.b);
+            let shortageC = Math.max(0, needed.c - have.c);
 
-            // 如果A级芯片不够，用B级芯片抵扣
-            let shortageB = 0;
-            if (remainingC > 0) {
-                shortageB = Math.min(needed.b, Math.ceil(remainingC / CHIP_CONVERSION.b_to_c));
-                remainingC -= shortageB * CHIP_CONVERSION.b_to_c;
+            // 如果有富余的A级芯片，可以转换为B级或C级来弥补缺口
+            if (have.a > needed.a) {
+                const surplusA = have.a - needed.a;
+
+                // 首先用富余A级芯片弥补B级缺口
+                if (shortageB > 0) {
+                    const convertToB = Math.min(surplusA, Math.ceil(shortageB / CHIP_CONVERSION.a_to_b));
+                    shortageB = Math.max(0, shortageB - convertToB * CHIP_CONVERSION.a_to_b);
+                    surplusA -= convertToB;
+                }
+
+                // 然后用富余A级芯片弥补C级缺口
+                if (shortageC > 0 && surplusA > 0) {
+                    const convertToC = Math.min(surplusA, Math.ceil(shortageC / CHIP_CONVERSION.a_to_c));
+                    shortageC = Math.max(0, shortageC - convertToC * CHIP_CONVERSION.a_to_c);
+                    surplusA -= convertToC;
+                }
             }
 
-            // 最后剩下的C级芯片缺口
-            let shortageC = Math.max(0, remainingC);
+            // 如果还有富余的B级芯片，可以转换为C级来弥补C级缺口
+            if (have.b > needed.b) {
+                const surplusB = (have.b - needed.b) + (have.a > needed.a ? 0 : 0); // 包含A级转换后的B级
+
+                if (shortageC > 0 && surplusB > 0) {
+                    const convertToC = Math.min(surplusB, Math.ceil(shortageC / CHIP_CONVERSION.b_to_c));
+                    shortageC = Math.max(0, shortageC - convertToC * CHIP_CONVERSION.b_to_c);
+                }
+            }
+
+            // 重新计算基于已有资源的最优分配
+            // 将所有现有资源转换为C级等价值，计算总缺口
+            const totalHaveC = have.c + have.b * CHIP_CONVERSION.b_to_c + have.a * CHIP_CONVERSION.a_to_c;
+            const totalNeededC = needed.c + needed.b * CHIP_CONVERSION.b_to_c + needed.a * CHIP_CONVERSION.a_to_c;
+
+            if (totalHaveC >= totalNeededC) {
+                // 资源足够，计算最优分配
+                const usedA = Math.min(have.a, needed.a);
+                const remainingA = have.a - usedA;
+
+                const usedB = Math.min(have.b + Math.floor(remainingA * CHIP_CONVERSION.a_to_b), needed.b);
+                const remainingB = have.b + Math.floor(remainingA * CHIP_CONVERSION.a_to_b) - usedB;
+
+                shortageA = 0;
+                shortageB = 0;
+                shortageC = 0;
+            }
 
             return {
                 c: shortageC,
@@ -806,13 +911,53 @@
             }
         }
 
+        // 浏览器缩放检测和适配
+        function handleZoomChange() {
+            const container = document.querySelector('.container');
+            const mainContent = document.querySelector('.main-content');
+
+            // 添加缩放感知类
+            container.classList.add('zoom-aware');
+            mainContent.classList.add('zoom-aware');
+
+            // 检测窗口大小变化（可能是缩放）
+            const windowWidth = window.innerWidth;
+            const containerWidth = container.offsetWidth;
+
+            // 如果容器宽度接近窗口宽度，说明可能是在缩放
+            if (containerWidth / windowWidth > 0.95) {
+                container.style.maxWidth = '95vw';
+            }
+
+            // 根据视窗高度调整主内容高度
+            const vh = window.innerHeight;
+            if (vh < 700) {
+                mainContent.style.height = '80vh';
+            } else if (vh > 900) {
+                mainContent.style.height = 'calc(100vh - 120px)';
+            }
+        }
+
         // 初始化所有技能为12级（因为通常都是想升满）
         window.onload = function() {
             for (let i = 1; i <= 5; i++) {
                 document.getElementById(`skill${i}`).value = '12';
                 updateSkillLevel(i); // 初始化显示
             }
+
+            // 初始化缩放检测
+            handleZoomChange();
         };
+
+        // 监听窗口大小变化（包括缩放）
+        window.addEventListener('resize', handleZoomChange);
+
+        // 监听缩放变化（Chrome, Edge等）
+        window.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                setTimeout(handleZoomChange, 100);
+            }
+        }, { passive: true });
     </script>
 </body>
 </html>
